@@ -1,0 +1,20 @@
+ Volume in drive D is MANOJ
+ Volume Serial Number is B061-8FAD
+
+ Directory of D:\Jarvis
+
+28-01-2026  09.55 PM    <DIR>          .
+28-01-2026  09.10 PM               114 .env
+28-01-2026  09.26 PM               532 .gitignore
+28-01-2026  05.07 PM               301 config.py
+28-01-2026  09.22 PM    <DIR>          data
+28-01-2026  09.55 PM                 0 files.txt
+28-01-2026  09.53 PM             5,003 main.py
+28-01-2026  09.51 PM                 5 manoj.py
+28-01-2026  09.20 PM               828 readme.md
+28-01-2026  09.51 AM                 0 requirements.txt
+28-01-2026  09.20 PM    <DIR>          tools
+28-01-2026  09.51 AM    <DIR>          venv
+28-01-2026  05.07 PM    <DIR>          __pycache__
+               8 File(s)          6,783 bytes
+               5 Dir(s)  206,562,783,232 bytes free

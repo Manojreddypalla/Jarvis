@@ -1,32 +1,21 @@
 Jarvis/
 │
-├── main.py
-├── config.py
+├── main.py              ← Entry point (thin)
 │
-├── app/
-│   └── runner.py
+├── core/
+│   ├── __init__.py
+│   ├── config.py        ← Env + keys
+│   ├── llm.py           ← Ollama/Gemini wrapper
+│   ├── prompt.py        ← System prompt
+│   ├── memory.py        ← Chat memory
+│   ├── parser.py        ← JSON cleaner
+│   ├── agent.py         ← Main brain loop
+│   └── runner.py        ← Orchestrator
 │
-├── agent/
-│   ├── brain.py
-│   └── prompt.py
-│
-├── llm/
+├── tools/
 │   └── ...
 │
-tools/
- ├── shell.py
- └── career_rag.py 
-│
-├── memory/              ⭐ NEW
-│   ├── __init__.py
-│   ├── store.py         ← Save to Qdrant
-│   └── retriever.py     ← Search Qdrant
-│
-└── personal_data/       ⭐ NEW
-    ├── notes/
-    ├── pdfs/
-    ├── repos/
-    └── profile/
+└── .env
 
 
 

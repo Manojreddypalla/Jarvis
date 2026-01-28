@@ -1,8 +1,6 @@
 # tools/ingest_tool.py
 
-import os
 from pathlib import Path
-
 
 from langchain_community.document_loaders import (
     PyPDFLoader,
@@ -16,10 +14,7 @@ from langchain_ollama import OllamaEmbeddings
 from langchain_qdrant import QdrantVectorStore
 
 
-# ---------------- CONFIG ----------------
-
 BASE_DIR = Path(__file__).parent.parent
-
 DATA_DIR = BASE_DIR / "data"
 
 QDRANT_URL = "http://localhost:6333"
@@ -29,9 +24,11 @@ EMBED_MODEL = "mxbai-embed-large"
 BASE_URL = "http://localhost:11434"
 
 
-# ---------------- MAIN TOOL ----------------
+def ingest_data_folder(_=None):
 
-def ingest_data_folder():
+    logs = []
+
+    logs.append("📂 Scanning data folder...")
 
     if not DATA_DIR.exists():
         return "❌ data/ folder not found"
@@ -40,11 +37,13 @@ def ingest_data_folder():
     files = list(DATA_DIR.glob("*"))
 
     if not files:
-        return "ℹ️ No files found in data/ folder"
+        return "ℹ️ No files found in data folder"
+
+
+    logs.append(f"📁 Found {len(files)} files")
 
 
     all_chunks = []
-
 
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=1200,
@@ -52,57 +51,61 @@ def ingest_data_folder():
     )
 
 
-    for file in files:
+    for i, file in enumerate(files, start=1):
 
         suffix = file.suffix.lower()
 
+        logs.append(f"📄 [{i}/{len(files)}] Processing {file.name}")
+
+
         try:
 
-            # -------- PDF --------
             if suffix == ".pdf":
                 loader = PyPDFLoader(str(file))
 
-            # -------- Markdown --------
             elif suffix == ".md":
                 loader = UnstructuredMarkdownLoader(str(file))
 
-            # -------- Word --------
             elif suffix in [".docx", ".doc"]:
                 loader = UnstructuredWordDocumentLoader(str(file))
 
             else:
+                logs.append("⚠️ Skipped (unsupported format)")
                 continue
 
 
             docs = loader.load()
-
             chunks = splitter.split_documents(docs)
+
+            logs.append(f"   📦 {len(chunks)} chunks created")
 
             all_chunks.extend(chunks)
 
-            # Delete after successful read
             file.unlink()
 
-            print(f"✅ Processed & deleted: {file.name}")
+            logs.append("   🗑️ File deleted")
 
 
         except Exception as e:
 
-            print(f"❌ Failed: {file.name} → {e}")
+            logs.append(f"❌ Failed: {file.name} → {e}")
 
 
     if not all_chunks:
-        return "⚠️ No valid documents to ingest"
+        return "⚠️ No valid documents processed"
 
 
-    # Embeddings
+    logs.append("🧠 Initializing embeddings...")
+
     embedder = OllamaEmbeddings(
         model=EMBED_MODEL,
         base_url=BASE_URL
     )
 
 
-    # Store
+    logs.append(f"🚀 Embedding {len(all_chunks)} chunks...")
+
+
     QdrantVectorStore.from_documents(
         documents=all_chunks,
         embedding=embedder,
@@ -111,4 +114,8 @@ def ingest_data_folder():
     )
 
 
-    return f"🚀 Ingested {len(all_chunks)} chunks from data folder"
+    logs.append("✅ Stored in vector DB")
+    logs.append("🎉 Ingestion complete!")
+
+
+    return "\n".join(logs)
