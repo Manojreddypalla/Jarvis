@@ -1,19 +1,33 @@
 Jarvis/
 │
-├── main.py          ← tiny
+├── main.py
+├── config.py
 │
 ├── app/
-│   └── runner.py    ← main loop
+│   └── runner.py
 │
 ├── agent/
-│   ├── brain.py     ← reasoning
+│   ├── brain.py
 │   └── prompt.py
 │
 ├── llm/
-│   ├── router.py    ← routing
-│   └── selector.py
+│   └── ...
 │
-├── tools/
-│   └── shell.py
+tools/
+ ├── shell.py
+ └── career_rag.py 
 │
-└── config.py
+├── memory/              ⭐ NEW
+│   ├── __init__.py
+│   ├── store.py         ← Save to Qdrant
+│   └── retriever.py     ← Search Qdrant
+│
+└── personal_data/       ⭐ NEW
+    ├── notes/
+    ├── pdfs/
+    ├── repos/
+    └── profile/
+
+
+
+User → main.py → brain.py → tools → memory
