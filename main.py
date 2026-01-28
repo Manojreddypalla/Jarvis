@@ -1,12 +1,60 @@
-# main.py
+import os
+import json
+from dotenv import load_dotenv
+from openai import OpenAI
 
-from config import Config
 
-from llm.selector import select_llm
-from llm.ollama import chat_ollama
-from llm.openai import chat_openai
+# -----------------------
+# Load API Key
+# -----------------------
 
-from core.prompt import build_prompt
+load_dotenv()
+
+client = OpenAI()
+
+
+# -----------------------
+# TOOL: Run Command
+# -----------------------
+
+def run_command(cmd):
+
+    result = os.system(cmd)
+
+    return result
+
+
+# -----------------------
+# Available Tools
+# -----------------------
+
+available_tools = {
+    "run_command": run_command
+}
+
+
+# -----------------------
+# System Prompt (V2 Agent)
+# -----------------------
+
+SYSTEM_PROMPT = """
+You are a CLI AI agent.
+
+You can think step by step.
+
+You have this tool:
+
+run_command(command)
+
+Use it when needed.
+
+Follow this loop:
+
+THINK -> PLAN -> ACT -> OBSERVE -> ANSWER
+
+When you want to use a tool,
+explicitly say: use run_command
+"""
 
 
 # -----------------------
@@ -15,26 +63,12 @@ from core.prompt import build_prompt
 
 def main():
 
-    print("🤖 Personal AI Assistant - V1\n")
-
-
-    ok = select_llm()
-
-    if not ok:
-        print("Invalid LLM")
-        return
-
-
     messages = [
-        {
-            "role": "system",
-            "content": "You are a helpful AI assistant."
-        }
+        {"role": "system", "content": SYSTEM_PROMPT}
     ]
 
 
-    print("\n✅ LLM Ready")
-    print("Type 'exit' to quit\n")
+    print("🤖 CLI Agent V2 Started\n")
 
 
     while True:
@@ -51,41 +85,61 @@ def main():
         })
 
 
-        prompt = build_prompt(messages)
-
-
         # -----------------------
-        # Route LLM
+        # Call LLM
         # -----------------------
 
-        if Config.llm_type == "ollama":
-
-            answer = chat_ollama(
-                messages,
-                Config.model
-            )
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=messages
+        )
 
 
-        elif Config.llm_type == "openai":
-
-            answer = chat_openai(
-                messages,
-                Config.api_key,
-                Config.model
-            )
+        result = response.choices[0].message.content
 
 
-        else:
-            answer = "No LLM"
-
-
-        print("\n🤖 Agent:", answer, "\n")
+        print("\n🤖 Agent:", result, "\n")
 
 
         messages.append({
             "role": "assistant",
-            "content": answer
+            "content": result
         })
+
+
+        # -----------------------
+        # Tool Detection
+        # -----------------------
+
+        if "run_command" in result.lower():
+
+            cmd = user
+
+            print("🔧 Running:", cmd)
+
+
+            output = available_tools["run_command"](cmd)
+
+
+            print("📡 Output:", output)
+
+
+            # -----------------------
+            # Observe Step
+            # -----------------------
+
+            observe = {
+                "step": "observe",
+                "tool": "run_command",
+                "input": cmd,
+                "output": output
+            }
+
+
+            messages.append({
+                "role": "developer",
+                "content": json.dumps(observe)
+            })
 
 
 # -----------------------
