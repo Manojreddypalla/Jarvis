@@ -1,170 +1,95 @@
 # main.py
 
-import json
-import requests
+from config import Config
+
+from llm.selector import select_llm
+from llm.ollama import chat_ollama
+from llm.openai import chat_openai
+
+from core.prompt import build_prompt
 
 
 # -----------------------
-# Ollama Client
-# -----------------------
-OLLAMA_URL = "http://localhost:11434/api/chat"
-MODEL_NAME = "llama3"   # or mistral, phi, etc
-
-
-def call_local_llm(messages):
-    """
-    Send messages to Ollama
-    """
-
-    payload = {
-        "model": MODEL_NAME,
-        "messages": messages,
-        "stream": False
-    }
-
-    res = requests.post(OLLAMA_URL, json=payload)
-
-    if res.status_code == 200:
-        return res.json()["message"]["content"]
-
-    return "LLM Error"
-
-
-# -----------------------
-# Tools (Prototype)
-# -----------------------
-
-def analyze_repo(repo_url):
-    return f"[Prototype] Repo analysis started for: {repo_url}"
-
-
-def read_file(path):
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            return f.read()[:2000]
-    except:
-        return "Cannot read file"
-
-
-# Tool Registry
-available_tools = {
-    "analyze_repo": analyze_repo,
-    "read_file": read_file
-}
-
-
-# -----------------------
-# System Prompt
-# -----------------------
-
-SYSTEM_PROMPT = """
-You are a personal AI agent.
-
-You can use tools:
-
-- analyze_repo(repo_url)
-- read_file(path)
-
-If user asks about a repository,
-use analyze_repo.
-
-If user asks to read a file,
-use read_file.
-
-Follow steps:
-start -> plan -> tool -> observe -> output
-"""
-
-
-# -----------------------
-# Main Loop
+# Main
 # -----------------------
 
 def main():
 
+    print("🤖 Personal AI Assistant - V1\n")
+
+
+    ok = select_llm()
+
+    if not ok:
+        print("Invalid LLM")
+        return
+
+
     messages = [
-        {"role": "system", "content": SYSTEM_PROMPT}
+        {
+            "role": "system",
+            "content": "You are a helpful AI assistant."
+        }
     ]
 
-    print("🤖 Local AI Assistant Started (Type 'exit' to quit)\n")
+
+    print("\n✅ LLM Ready")
+    print("Type 'exit' to quit\n")
+
 
     while True:
 
         user = input("You: ")
 
-        if user.lower() == "exit":
+        if user == "exit":
             break
+
 
         messages.append({
             "role": "user",
             "content": user
         })
 
-        # Call Local LLM
-        result = call_local_llm(messages)
 
-        print("\n🤖 Agent:", result, "\n")
+        prompt = build_prompt(messages)
+
+
+        # -----------------------
+        # Route LLM
+        # -----------------------
+
+        if Config.llm_type == "ollama":
+
+            answer = chat_ollama(
+                messages,
+                Config.model
+            )
+
+
+        elif Config.llm_type == "openai":
+
+            answer = chat_openai(
+                messages,
+                Config.api_key,
+                Config.model
+            )
+
+
+        else:
+            answer = "No LLM"
+
+
+        print("\n🤖 Agent:", answer, "\n")
+
 
         messages.append({
             "role": "assistant",
-            "content": result
+            "content": answer
         })
-
-        # -----------------------
-        # Tool Detection
-        # -----------------------
-
-        # Repo Tool
-        if "analyze_repo" in result:
-
-            repo = user.split()[-1]
-
-            print("🔧 Tool: analyze_repo ->", repo)
-
-            output = available_tools["analyze_repo"](repo)
-
-            print("📡 Result:", output)
-
-            observe = {
-                "step": "observe",
-                "tool": "analyze_repo",
-                "input": repo,
-                "output": output
-            }
-
-            messages.append({
-                "role": "developer",
-                "content": json.dumps(observe)
-            })
-
-
-        # File Tool
-        elif "read_file" in result:
-
-            path = user.split()[-1]
-
-            print("🔧 Tool: read_file ->", path)
-
-            output = available_tools["read_file"](path)
-
-            print("📡 Result:\n", output)
-
-            observe = {
-                "step": "observe",
-                "tool": "read_file",
-                "input": path,
-                "output": output[:1500]
-            }
-
-            messages.append({
-                "role": "developer",
-                "content": json.dumps(observe)
-            })
 
 
 # -----------------------
 # Run
 # -----------------------
 
-if __name__ == "__main__":
-    main()
+main()
