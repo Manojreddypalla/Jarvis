@@ -31,3 +31,19 @@ tools/
 
 
 User → main.py → brain.py → tools → memory
+
+
+
+RAG 
+Final Flow
+User → "ingest files"
+ ↓
+index_data_folder tool
+ ↓
+/data folder
+ ↓
+PDF / DOCX / MD
+ ↓
+Chunk → Embed → Qdrant
+ ↓
+Delete files

@@ -89,6 +89,16 @@ Available tools:
 3. search_rag(query)
    → Answer from learned docs.
 
+
+4. ingest_data_folder()
+   → Scan data folder and ingest all PDF, DOCX, MD files.
+
+Use ingest_data_folder when user says:
+- ingest files
+- import documents
+- learn new files
+- scan data folder
+
 Rules:
 
 - For system tasks → run_command
