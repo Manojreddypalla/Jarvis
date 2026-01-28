@@ -12,7 +12,6 @@ def select_llm():
     choice = input("Enter choice: ")
 
 
-    # Ollama
     if choice == "1":
 
         model = input("Enter Ollama model: ")
@@ -23,7 +22,6 @@ def select_llm():
         return True
 
 
-    # OpenAI
     if choice == "2":
 
         key = input("Enter OpenAI API Key (temp): ")
